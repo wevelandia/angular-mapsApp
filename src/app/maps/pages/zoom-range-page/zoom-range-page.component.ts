@@ -1,0 +1,82 @@
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { LngLat, Map } from 'mapbox-gl'; // or "const mapboxgl = require('mapbox-gl');"
+
+@Component({
+  selector: 'maps-zoom-range-page',
+  templateUrl: './zoom-range-page.component.html',
+  styleUrl: './zoom-range-page.component.css'
+})
+export class ZoomRangePageComponent implements AfterViewInit, OnDestroy {
+
+  // Vamos a hacer referencia a un objeto HTML en este caso a #map
+  @ViewChild('map') divMap?: ElementRef;
+
+  // Para manejar el zoom del mapa
+  public zoom: number = 10;
+  public map?: Map;  // Este map puede estar nulo en algun determinado momento.
+  public currentLngLat: LngLat = new LngLat(-74.1472510767637, 4.609742054962979);
+
+  // Despues de que la vista ha sido inicializada.
+  // En container: Me permite recibir un string o un HTMLElement que en este caso seria nuesta referencia de #map (div).
+  ngAfterViewInit(): void {
+
+    // this.divMap?.nativeElement: Esto puede ser en alguno momento nulo, por ello se pone la siguiente validación antes de cargar el mapa
+    //console.log(this.divMap);
+    if ( !this.divMap ) throw 'El elemento HTML no fue encontrado';
+
+    this.map = new Map({
+      //container: 'map', // container ID, si en el HTML se tiene id="map"
+      container: this.divMap?.nativeElement,
+      style: 'mapbox://styles/mapbox/streets-v12', // style URL
+      //center: [-74.5, 40], // starting position [lng, lat]
+      center: this.currentLngLat,
+      zoom: this.zoom, // starting zoom
+    });
+
+    this.mapListeners();
+  }
+
+  ngOnDestroy(): void {
+    // Removemos aca todos los listener
+    this.map?.remove();
+  }
+
+  // Creamos un listener para saber si esta pasando algo con el mapa en especial el Zoom
+  mapListeners() {
+    if ( !this.map ) throw 'Mapa no inicializado';
+
+    this.map.on('zoom', (ev) => {
+      //console.log(ev);
+      this.zoom = this.map!.getZoom();
+    } );
+
+    this.map.on('zoomend', (ev) => {
+      if ( this.map!.getZoom() < 18 ) return;  // Si es menor de 18 se permite hacer zoom.
+      this.map!.zoomTo(18);  // Si es mayor de 18 el mapa pasa al zoom 18.
+    } );
+
+    // Se crea otro listener para cuando el mapa se mueva.
+    this.map.on('move', () => {
+      this.currentLngLat = this.map!.getCenter();
+      //console.log(this.currentLngLat);
+      // Para extraer la lat y lng
+      const { lng, lat } = this.currentLngLat;
+      //console.log({ lng, lat });
+    });
+
+  }
+
+  zoomIn() {
+    this.map?.zoomIn();
+  }
+
+  zoomOut() {
+    this.map?.zoomOut();
+  }
+
+  zoomChanged( value: string ) {
+    this.zoom = Number(value);
+    this.map?.zoomTo( this.zoom );
+  }
+
+}

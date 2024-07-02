@@ -1,0 +1,17 @@
+<div id="map" #map></div>
+
+<!-- En la lista de Marker cuando se de doble click se quiere borrar de la lista y el marker del mapa. -->
+<ul class="list-group">
+  <li *ngFor="let colorMarker of markers; let i = index"
+    [ngStyle]="{ backgroundColor:colorMarker.color }"
+    (dblclick)="deleteMarker(i)"
+    (click)="flyTo( colorMarker.marker )"
+    class="list-group-item">
+    Marker {{ i + 1 }}
+  </li>
+</ul>
+
+<!-- Este botón para cuando se de clic sobre el me crea un marcador en el centro del mapa. -->
+<button (click)="createMarker()" class="btn btn-primary">
+  + Agregar marcador
+</button>
